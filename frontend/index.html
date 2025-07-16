@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMB to HubSpot Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Login Styles */
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+            margin-top: 10vh;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Main App Styles */
+        .main-app {
+            display: none;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #2980b9, #6dd5fa);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .remove-btn:hover {
+            background: #c0392b;
+        }
+
+        .add-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            background: #219a52;
+        }
+
+        .scrape-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
+
+        .scrape-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .scrape-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .status.error {
+            background: #fadbd8;
+            border-left-color: #e74c3c;
+        }
+
+        .status.success {
+            background: #d5f4e6;
+            border-left-color: #27ae60;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #ddd;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .backend-config {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .backend-config input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+            }
+            
+            .input-row input {
+                margin-bottom: 10px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection" class="login-container">
+        <div class="login-header">
+            <h1>📍</h1>
+            <p>GMB to HubSpot Scraper</p>
+        </div>
+        
+        <div class="backend-config">
+            <label for="backendUrl">Backend URL:</label>
+            <input type="text" id="backendUrl" placeholder="http://your-laptop-ip:5000" value="http://localhost:5000">
+            <small>Enter your backend URL (e.g., http://192.168.1.100:5000)</small>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">Login</button>
+            <div class="loading" id="loginLoading"></div>
+            <div class="error" id="loginError"></div>
+        </form>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="mainSection" class="main-app">
+        <div class="container">
+            <div class="header">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+                <h1>📍 GMB to HubSpot Scraper</h1>
+                <p>Extract business URLs, phone numbers, and names directly from Google Maps</p>
+            </div>
+
+            <div class="section">
+                <h3>🔧 Search Configuration</h3>
+                <p>Enter city/state and item type to search for businesses.</p>
+                
+                <div id="inputRows">
+                    <div class="input-row">
+                        <input type="text" placeholder="City, State (e.g., San Francisco, CA)" class="city-input">
+                        <input type="text" placeholder="Item/Service (e.g., Mobility Scooter rentals)" class="item-input">
+                        <button class="remove-btn" onclick="removeRow(this)">Remove</button>
+                    </div>
+                </div>
+                
+                <button class="add-btn" onclick="addRow()">➕ Add Row</button>
+                
+                <div class="warning">
+                    ⚠️ Ensure cities are formatted like <code>City, ST</code> (e.g., <code>San Francisco, CA</code>)
+                </div>
+                
+                <button class="scrape-btn" id="scrapeBtn" onclick="startScraping()">🚀 Start Scraping</button>
+                
+                <div class="loading" id="loading"></div>
+                <div class="status" id="status" style="display: none;"></div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Results</h3>
+                <div id="results">
+                    <p>No results yet. Start scraping to see data here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let BACKEND_URL = 'http://localhost:5000';
+        let statusCheckInterval;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved backend URL
+            const savedUrl = localStorage.getItem('backendUrl');
+            if (savedUrl) {
+                document.getElementById('backendUrl').value = savedUrl;
+                BACKEND_URL = savedUrl;
+            }
+
+            // Check if already logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                showMainApp();
+                loadResults();
+            }
+        });
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const backendUrl = document.getElementById('backendUrl').value;
+            
+            // Save backend URL
+            BACKEND_URL = backendUrl;
+            localStorage.setItem('backendUrl', backendUrl);
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const loading = document.getElementById('loginLoading');
+            const error = document.getElementById('loginError');
+            
+            loginBtn.disabled = true;
+            loading.style.display = 'block';
+            error.textContent = '';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    showMainApp();
+                    loadResults();
+                } else {
+                    error.textContent = data.error || 'Login failed';
+                }
+            } catch (err) {
+                error.textContent = 'Cannot connect to backend. Please check the URL and make sure the backend is running.';
+                console.error('Login error:', err);
+            } finally {
+                loginBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        function showMainApp() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainSection').style.display = 'block';
+            document.body.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainSection').style.display = 'none';
+            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            
+            // Clear form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function addRow() {
+            const inputRows = document.getElementById('inputRows');
+            const newRow = document.createElement('div');
+            newRow.className = 'input-row';
+            newRow.innerHTML = `
+                <input type="text" placeholder="City, State (e.g., San Francisco, CA)" class="city-input">
+                <input type="text" placeholder="Item/Service (e.g., Mobility Scooter rentals)" class="item-input">
+                <button class="remove-btn" onclick="removeRow(this)">Remove</button>
+            `;
+            inputRows.appendChild(newRow);
+        }
+
+        function removeRow(button) {
+            const inputRows = document.getElementById('inputRows');
+            if (inputRows.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        function getInputData() {
+            const rows = document.querySelectorAll('#inputRows .input-row');
+            const cities = [];
+            const items = [];
+            
+            rows.forEach(row => {
+                const cityInput = row.querySelector('.city-input');
+                const itemInput = row.querySelector('.item-input');
+                
+                if (cityInput.value.trim() && itemInput.value.trim()) {
+                    cities.push(cityInput.value.trim());
+                    items.push(itemInput.value.trim());
+                }
+            });
+            
+            return { cities, items };
+        }
+
+        async function startScraping() {
+            const { cities, items } = getInputData();
+            
+            if (cities.length === 0 || items.length === 0) {
+                showStatus('Please enter at least one city and item pair.', 'error');
+                return;
+            }
+            
+            const scrapeBtn = document.getElementById('scrapeBtn');
+            const loading = document.getElementById('loading');
+            const status = document.getElementById('status');
+            
+            scrapeBtn.disabled = true;
+            loading.style.display = 'block';
+            status.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/scrape`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cities, items }),
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                if (data.message) {
+                    showStatus('Scraping started! Please wait...', 'success');
+                    startStatusChecking();
+                } else {
+                    showStatus(data.error || 'Failed to start scraping', 'error');
+                    scrapeBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            } catch (error) {
+                showStatus('Cannot connect to backend. Please check if the backend is running.', 'error');
+                scrapeBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function startStatusChecking() {
+            statusCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/status`, {
+                        mode: 'cors'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.progress) {
+                        showStatus(data.progress, data.error ? 'error' : 'success');
+                    }
+                    
+                    if (!data.is_running) {
+                        clearInterval(statusCheckInterval);
+                        document.getElementById('scrapeBtn').disabled = false;
+                        document.getElementById('loading').style.display = 'none';
+                        
+                        if (data.error) {
+                            showStatus(`Error: ${data.error}`, 'error');
+                        } else {
+                            showStatus('Scraping completed successfully!', 'success');
+                            loadResults();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking status:', error);
+                    // Continue checking, might be temporary network issue
+                }
+            }, 2000);
+        }
+
+        function showStatus(message, type = '') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        async function loadResults() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/results`, {
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                const resultsDiv = document.getElementById('results');
+                
+                if (data.results && data.results.length > 0) {
+                    let html = '';
+                    
+                    data.results.forEach(result => {
+                        html += `
+                            <h4>Results from: ${result.filename}</h4>
+                            <table class="results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Index</th>
+                                        <th>URL</th>
+                                        <th>Phone Number</th>
+                                        ${result.data[0] && result.data[0].hasOwnProperty('Company Name') ? '<th>Company Name</th>' : ''}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        result.data.forEach(row => {
+                            html += `
+                                <tr>
+                                    <td>${row.Index || '-'}</td>
+                                    <td><a href="${row.URL}" target="_blank">${row.URL || '-'}</a></td>
+                                    <td>${row['Phone Number'] || '-'}</td>
+                                    ${row['Company Name'] ? `<td>${row['Company Name']}</td>` : ''}
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table><br>';
+                    });
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<p>No results found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading results:', error);
+                document.getElementById('results').innerHTML = '<p>Error loading results. Please check backend connection.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
